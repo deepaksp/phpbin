@@ -54,7 +54,7 @@ jobs:
           
           ./buildconf --force 
           
-          ./configure --host=$TARGET --enable-embed --disable-all --enable-json
+          ./configure --host=$TARGET --enable-embed --disable-all --disable-dns --disable-mailparse --enable-json
             
       - name: Build PHP 
         run: | 
