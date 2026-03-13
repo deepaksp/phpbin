@@ -45,7 +45,30 @@ jobs:
           git clone https://github.com/php/php-src.git 
           cd php-src 
           git checkout PHP-8.3 
-          rm ext/standard/dns.c
+          cd php-src/ext/standard
+          
+          cat <<'EOF' > dns.c
+            #include "php.h"
+
+            PHP_FUNCTION(dns_get_record)
+            {
+            php_error_docref(NULL, E_WARNING, "DNS functions disabled on Android build");
+            RETURN_FALSE;
+            }
+
+            PHP_FUNCTION(gethostbyname)
+            {
+            php_error_docref(NULL, E_WARNING, "DNS functions disabled on Android build");
+            RETURN_FALSE;
+            }
+
+            PHP_FUNCTION(gethostbynamel)
+            {
+            php_error_docref(NULL, E_WARNING, "DNS functions disabled on Android build");
+              RETURN_FALSE;
+            }
+          EOF
+
       
       - name: Configure PHP 
         run: | 
