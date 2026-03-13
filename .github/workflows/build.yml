@@ -47,8 +47,26 @@ jobs:
           git checkout PHP-8.3 
          
           cat <<'EOF' > android_compat.h
-            #ifndef PHP_ANDROID_COMPAT_H #define PHP_ANDROID_COMPAT_H #ifdef __ANDROID__ #include <unistd.h> #include <sys/types.h> #ifndef getdtablesize #define getdtablesize() sysconf(_SC_OPEN_MAX) #endif #ifndef daemon static inline int daemon(int nochdir, int noclose) { return -1; } #endif #endif #endif
-          EOF
+              #ifndef PHP_ANDROID_COMPAT_H
+              #define PHP_ANDROID_COMPAT_H
+              
+              #ifdef ANDROID
+              
+              #include <unistd.h>
+              #include <sys/types.h>
+              
+              #ifndef getdtablesize
+              #define getdtablesize() sysconf(_SC_OPEN_MAX)
+              #endif
+              
+              #ifndef daemon
+              static inline int daemon(int nochdir, int noclose) { return -1; }
+              #endif
+              
+              #endif
+              
+              #endif          
+            EOF
 
           sed -i '1i #include "android_compat.h"' main/php.h
 
