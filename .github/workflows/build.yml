@@ -45,8 +45,8 @@ jobs:
           git clone https://github.com/php/php-src.git 
           cd php-src 
           git checkout PHP-8.3 
-          cd php-src/ext/standard
-          
+          cd ext/standard
+          mv dns.c dns_original.c
           cat <<'EOF' > dns.c
             #include "php.h"
 
