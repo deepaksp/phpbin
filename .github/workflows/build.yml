@@ -28,18 +28,10 @@ jobs:
         uses: actions/checkout@v4 
         
       - name: Install build tools 
-        run: | 
-          sudo apt-get update 
-          sudo apt-get install -y \ 
-          autoconf \ 
-          bison \ 
-          re2c \ 
-          libxml2-dev \ 
-          pkg-config \ 
-          build-essential \ 
-          curl \ 
-          unzip \ 
-          git 
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf bison re2c libxml2-dev pkg-config build-essential curl unzip git
+
         
       - name: Download Android NDK 
         run: | 
@@ -61,11 +53,7 @@ jobs:
           
           ./buildconf --force 
           
-          ./configure \ 
-            --host=$TARGET \ 
-            --enable-embed \ 
-            --disable-all \ 
-            --enable-json 
+          ./configure --host=$TARGET --enable-embed --disable-all --enable-json
             
       - name: Build PHP 
         run: | 
