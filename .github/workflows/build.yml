@@ -37,24 +37,41 @@ jobs:
             re2c \
             build-essential \
             libtool \
-            pkg-config
+            pkg-config \
+            docker.io
     
       - name: Clone Termux packages repo
         run: |
           git clone https://github.com/termux/termux-packages.git
     
-      - name: Build PHP using Termux script
+      - name: Enable PHP embed SAPI
+        run: |
+          cd termux-packages/packages/php
+    
+          # Add embed support to configure flags
+          sed -i 's/TERMUX_PKG_EXTRA_CONFIGURE_ARGS="/TERMUX_PKG_EXTRA_CONFIGURE_ARGS="--enable-embed /' build.sh
+    
+      - name: Build PHP using Termux build system
         run: |
           cd termux-packages
           ./scripts/run-docker.sh ./build-package.sh php
     
-      - name: Copy artifacts
+      - name: Collect artifacts
         run: |
           mkdir artifacts
+    
+          # Embedded PHP library
           find termux-packages -name "libphp*.so" -exec cp {} artifacts/ \;
+    
+          # Embed headers
+          find termux-packages -name "php_embed.h" -exec cp {} artifacts/ \;
+    
+      - name: Show artifacts
+        run: |
+          ls -R artifacts
     
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php-android
+          name: php-android-embed
           path: artifacts
