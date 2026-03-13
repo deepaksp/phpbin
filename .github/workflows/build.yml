@@ -43,7 +43,8 @@ jobs:
       - name: Clone PHP source 
         run: | 
           git clone https://github.com/php/php-src.git 
-          cd php-src git checkout PHP-8.3 
+          cd php-src 
+          git checkout PHP-8.3 
       
       - name: Configure PHP 
         run: | 
@@ -57,7 +58,8 @@ jobs:
             
       - name: Build PHP 
         run: | 
-          cd php-src make -j$(nproc) 
+          cd php-src 
+          make -j$(nproc) 
           
       - name: Collect artifacts 
         run: | 
