@@ -45,7 +45,7 @@ jobs:
           git clone https://github.com/php/php-src.git 
           cd php-src 
           git checkout PHP-8.3 
-          patch -p1 << 'EOF' diff --git a/ext/standard/dns.c b/ext/standard/dns.c index 0000000..0000000 100644 --- a/ext/standard/dns.c +++ b/ext/standard/dns.c @@ +#ifdef __ANDROID__ +#define PHP_DNS_DISABLED 1 +#endif EOF
+          sed -i '1i #ifdef ANDROID\n#define PHP_DNS_DISABLED 1\n#endif\n' ext/standard/dns.c
           
       
       - name: Configure PHP 
