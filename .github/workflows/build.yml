@@ -23,50 +23,37 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-    
-      - name: Pull Termux Docker image
-        run: docker pull ghcr.io/termux/termux-docker:latest
-    
-      - name: Start container
+      - name: Install dependencies
         run: |
-          docker run -d --name termux phpbuild ghcr.io/termux/termux-docker:latest sleep infinity
-    
-      - name: Install build dependencies
-        run: |
-          docker exec termux pkg update -y
-          docker exec termux pkg install -y \
+          sudo apt-get update
+          sudo apt-get install -y \
             git \
+            curl \
+            wget \
             clang \
             make \
             autoconf \
             bison \
             re2c \
-            libxml2 \
-            libxml2-dev \
-            openssl \
-            openssl-dev
+            build-essential \
+            libtool \
+            pkg-config
     
-      - name: Clone PHP source
+      - name: Clone Termux packages repo
         run: |
-          docker exec termux git clone https://github.com/php/php-src.git
-          docker exec termux bash -c "cd php-src && git checkout PHP-8.3"
+          git clone https://github.com/termux/termux-packages.git
     
-      - name: Build PHP
+      - name: Build PHP using Termux script
         run: |
-          docker exec termux bash -c "
-          cd php-src &&
-          ./buildconf --force &&
-          ./configure --enable-embed --disable-cgi &&
-          make -j$(nproc)
-          "
+          cd termux-packages
+          ./scripts/run-docker.sh ./build-package.sh php
     
-      - name: Copy build artifacts
+      - name: Copy artifacts
         run: |
-          docker cp termux:/data/data/com.termux/files/home/php-src/libs ./artifacts
+          mkdir artifacts
+          find termux-packages -name "libphp*.so" -exec cp {} artifacts/ \;
     
-      - name: Upload artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: php-android
