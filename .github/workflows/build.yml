@@ -45,29 +45,12 @@ jobs:
           git clone https://github.com/php/php-src.git 
           cd php-src 
           git checkout PHP-8.3 
-          cd ext/standard
-          mv dns.c dns_original.c
-          cat <<'EOF' > dns.c
-            #include "php.h"
-
-            PHP_FUNCTION(dns_get_record)
-            {
-            php_error_docref(NULL, E_WARNING, "DNS functions disabled on Android build");
-            RETURN_FALSE;
-            }
-
-            PHP_FUNCTION(gethostbyname)
-            {
-            php_error_docref(NULL, E_WARNING, "DNS functions disabled on Android build");
-            RETURN_FALSE;
-            }
-
-            PHP_FUNCTION(gethostbynamel)
-            {
-            php_error_docref(NULL, E_WARNING, "DNS functions disabled on Android build");
-              RETURN_FALSE;
-            }
+         
+          cat <<'EOF' > android_compat.h
+            #ifndef PHP_ANDROID_COMPAT_H #define PHP_ANDROID_COMPAT_H #ifdef __ANDROID__ #include <unistd.h> #include <sys/types.h> #ifndef getdtablesize #define getdtablesize() sysconf(_SC_OPEN_MAX) #endif #ifndef daemon static inline int daemon(int nochdir, int noclose) { return -1; } #endif #endif #endif
           EOF
+
+          sed -i '1i #include "android_compat.h"' main/php.h
 
       
       - name: Configure PHP 
