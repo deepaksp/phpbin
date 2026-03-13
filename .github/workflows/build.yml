@@ -45,8 +45,7 @@ jobs:
           git clone https://github.com/php/php-src.git 
           cd php-src 
           git checkout PHP-8.3 
-          sed -i '1i #ifdef ANDROID\n#define PHP_DNS_DISABLED 1\n#endif\n' ext/standard/dns.c
-          
+          rm ext/standard/dns.c
       
       - name: Configure PHP 
         run: | 
