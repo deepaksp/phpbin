@@ -23,77 +23,51 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      
-      - name: Checkout repo 
-        uses: actions/checkout@v4 
-        
-      - name: Install build tools 
+      - name: Checkout repo
+        uses: actions/checkout@v4
+    
+      - name: Pull Termux Docker image
+        run: docker pull ghcr.io/termux/termux-docker:latest
+    
+      - name: Start container
         run: |
-          sudo apt-get update
-          sudo apt-get install -y autoconf bison re2c libxml2-dev pkg-config build-essential curl unzip git
-
-        
-      - name: Download Android NDK 
-        run: | 
-          wget https://dl.google.com/android/repository/android-ndk-r27-linux.zip 
-          unzip android-ndk-r27-linux.zip 
-          echo "NDK=$PWD/android-ndk-r27" >> $GITHUB_ENV 
-          echo "TOOLCHAIN=$PWD/android-ndk-r27/toolchains/llvm/prebuilt/linux-x86_64" >> $GITHUB_ENV 
-          
-      - name: Clone PHP source 
-        run: | 
-          git clone https://github.com/php/php-src.git 
-          cd php-src 
-          git checkout PHP-8.3 
-         
-          cat <<'EOF' > android_compat.h
-              #ifndef PHP_ANDROID_COMPAT_H
-              #define PHP_ANDROID_COMPAT_H
-              
-              #ifdef ANDROID
-              
-              #include <unistd.h>
-              #include <sys/types.h>
-              
-              #ifndef getdtablesize
-              #define getdtablesize() sysconf(_SC_OPEN_MAX)
-              #endif
-              
-              #ifndef daemon
-              static inline int daemon(int nochdir, int noclose) { return -1; }
-              #endif
-              
-              #endif
-              
-              #endif          
-            EOF
-
-          sed -i '1i #include "android_compat.h"' main/php.h
-
-      
-      - name: Configure PHP 
-        run: | 
-          cd php-src 
-          export CC=$TOOLCHAIN/bin/${TARGET}${API}-clang 
-          export CXX=$TOOLCHAIN/bin/${TARGET}${API}-clang++ 
-          
-          ./buildconf --force 
-          
-          ./configure --host=$TARGET --enable-embed --disable-all --disable-dns --disable-mailparse --enable-json
-            
-      - name: Build PHP 
-        run: | 
-          cd php-src 
-          make -j$(nproc) 
-          
-      - name: Collect artifacts 
-        run: | 
-          mkdir artifacts 
-          cp php-src/libs/libphp.so artifacts/ 
-          cp -r php-src/sapi/embed artifacts/headers 
-          
-      - name: Upload PHP embed build 
-        uses: actions/upload-artifact@v4 
-        with: 
-          name: php-android-embed 
+          docker run -d --name termux phpbuild ghcr.io/termux/termux-docker:latest sleep infinity
+    
+      - name: Install build dependencies
+        run: |
+          docker exec termux pkg update -y
+          docker exec termux pkg install -y \
+            git \
+            clang \
+            make \
+            autoconf \
+            bison \
+            re2c \
+            libxml2 \
+            libxml2-dev \
+            openssl \
+            openssl-dev
+    
+      - name: Clone PHP source
+        run: |
+          docker exec termux git clone https://github.com/php/php-src.git
+          docker exec termux bash -c "cd php-src && git checkout PHP-8.3"
+    
+      - name: Build PHP
+        run: |
+          docker exec termux bash -c "
+          cd php-src &&
+          ./buildconf --force &&
+          ./configure --enable-embed --disable-cgi &&
+          make -j$(nproc)
+          "
+    
+      - name: Copy build artifacts
+        run: |
+          docker cp termux:/data/data/com.termux/files/home/php-src/libs ./artifacts
+    
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-android
           path: artifacts
